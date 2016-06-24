@@ -1,10 +1,10 @@
 module ActiveJob
   module TrafficControl
     module Concurrency
-      include ActiveJob::TrafficControl::Base
       extend ::ActiveSupport::Concern
 
       included do
+        include ActiveJob::TrafficControl::Base
         @job_concurrency = nil
 
         around_perform do |_, block|

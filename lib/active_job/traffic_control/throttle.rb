@@ -1,10 +1,11 @@
 module ActiveJob
   module TrafficControl
     module Throttle
-      include ActiveJob::TrafficControl::Base
       extend ::ActiveSupport::Concern
 
       included do
+        include ActiveJob::TrafficControl::Base
+
         @job_throttling = nil
 
         around_perform do |_, block|

@@ -7,21 +7,47 @@ module ActiveJob
         def cleaned_name
           name.to_s.gsub(/\W/, "_")
         end
+
+        def logger
+          if defined?(Rails)
+            Rails.logger
+          else
+            @logger ||= Logger.new(STDOUT).tap do |logger|
+              logger.formatter = -> (_, datetime, _, msg) { "#{datetime}: #{msg}\n" }
+            end
+          end
+        end
+
+        def cache_client
+          if defined?(Rails.cache)
+            Rails.cache
+          else
+            @cache_client ||= ActiveSupport::Cache::MemoryStore.new
+          end
+        end
       end
 
       def cleaned_name
         self.class.cleaned_name
       end
 
+      def logger
+        self.class.logger
+      end
+
+      def cache_client
+        self.class.cache_client
+      end
+
       def reenqueue(range, reason)
         later_delay = rand(range).seconds
         retry_job(wait: later_delay)
-        Rails.logger.error "Re-enqueing #{self.class.name} to run in #{later_delay}s due to #{reason}"
+        logger.error "Re-enqueing #{self.class.name} to run in #{later_delay}s due to #{reason}"
         ActiveSupport::Notifications.instrument "re_enqueue.active_job", job: self, reason: reason
       end
 
       def drop(reason)
-        Rails.logger.error "Dropping #{self.class.name} due to #{reason}"
+        logger.error "Dropping #{self.class.name} due to #{reason}"
         ActiveSupport::Notifications.instrument "dropped.active_job", job: self, reason: reason
       end
 
