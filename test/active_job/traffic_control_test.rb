@@ -62,9 +62,10 @@ class ActiveJob::TrafficControlTest < Minitest::Test
   end
 
   def test_throttle
-    ThrottleTestJob.perform_now
-    ThrottleTestJob.perform_now
-    ThrottleTestJob.perform_now
+    t1 = Thread.new { ThrottleTestJob.perform_now }
+    t2 = Thread.new { ThrottleTestJob.perform_now }
+    t3 = Thread.new { ThrottleTestJob.perform_now }
+    [t1, t2, t3].map(&:join)
     assert_equal 2, $throttle_count
     sleep 1
     ThrottleTestJob.perform_now
@@ -72,8 +73,9 @@ class ActiveJob::TrafficControlTest < Minitest::Test
   end
 
   def test_concurrency
-    ConcurrencyTestJob.perform_later
-    ConcurrencyTestJob.perform_later
+    t1 = Thread.new { ConcurrencyTestJob.perform_now }
+    t2 = Thread.new { ConcurrencyTestJob.perform_now }
+    [t1, t2].map(&:join)
     sleep 1
     assert_equal 1, $concurrency_count
     ConcurrencyTestJob.perform_later
@@ -82,8 +84,9 @@ class ActiveJob::TrafficControlTest < Minitest::Test
   end
 
   def test_concurrency_is_not_inherited
-    InheritedConcurrencyJob.perform_later
-    InheritedConcurrencyJob.perform_later
+    t1 = Thread.new { InheritedConcurrencyJob.perform_later }
+    t2 = Thread.new { InheritedConcurrencyJob.perform_later }
+    [t1, t2].map(&:join)
     sleep 1
     assert_equal 2, $inherited_concurrency_count
   end

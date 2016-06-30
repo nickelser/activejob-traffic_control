@@ -17,4 +17,4 @@ def test_logger
   end
 end
 
-ActiveJob::Base.queue_adapter = :async
+ActiveJob::Base.queue_adapter = :inline
