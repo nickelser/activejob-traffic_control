@@ -6,7 +6,7 @@ module ActiveJob
       extend ::ActiveSupport::Concern
       extend Forwardable
 
-      def_delegators ActiveJob::TrafficControl, :logger, :cache_client, :client, :client_klass
+      def_delegators ActiveJob::TrafficControl, :cache_client, :client, :client_klass
 
       class_methods do
         def cleaned_name

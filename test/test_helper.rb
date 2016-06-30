@@ -9,12 +9,11 @@ end
 require "active_job/traffic_control"
 require "minitest/autorun"
 
-def test_logger
-  @logger ||= begin
-    l = Logger.new(STDOUT)
-    l.level = Logger::ERROR
-    l
-  end
+test_logger = begin
+  l = Logger.new(STDOUT)
+  l.level = Logger::ERROR
+  l
 end
 
 ActiveJob::Base.queue_adapter = :inline
+ActiveJob::Base.logger = test_logger

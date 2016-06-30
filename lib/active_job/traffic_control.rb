@@ -12,20 +12,8 @@ require "active_job/traffic_control/throttle"
 module ActiveJob
   module TrafficControl
     class << self
-      attr_writer :logger, :cache_client
+      attr_writer :cache_client
       attr_accessor :client_klass
-
-      def logger
-        @logger ||= begin
-          if defined?(Rails)
-            Rails.logger
-          else
-            Logger.new(STDOUT).tap do |logger|
-              logger.formatter = -> (_, datetime, _, msg) { "#{datetime}: #{msg}\n" }
-            end
-          end
-        end
-      end
 
       def cache_client
         @cache_client ||= begin
@@ -37,6 +25,10 @@ module ActiveJob
             ActiveSupport::Cache::MemoryStore.new
           end
         end
+      end
+
+      def logger
+        ActiveJob::Base.logger
       end
 
       def client

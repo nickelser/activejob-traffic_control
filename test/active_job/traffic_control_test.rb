@@ -41,10 +41,6 @@ class ActiveJob::TrafficControlTest < Minitest::Test
     end
   end
 
-  def setup
-    ActiveJob::TrafficControl.logger = test_logger
-  end
-
   def test_that_it_has_a_version_number
     refute_nil ::ActiveJob::TrafficControl::VERSION
   end
