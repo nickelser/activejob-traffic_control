@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActiveJob
   module TrafficControl
     module Concurrency
@@ -8,12 +10,24 @@ module ActiveJob
 
         def concurrency(threshold, drop: true, key: nil, wait_timeout: 0.1, stale_timeout: 60 * 10)
           raise ArgumentError, "Concurrent jobs needs to be an integer > 0" if threshold.to_i < 1
-          @job_concurrency = {threshold: threshold.to_i, drop: drop, wait_timeout: wait_timeout.to_f, stale_timeout: stale_timeout.to_f, key: key}
+          @job_concurrency = {
+            threshold: threshold.to_i,
+            drop: drop,
+            wait_timeout: wait_timeout.to_f,
+            stale_timeout: stale_timeout.to_f,
+            key: key
+          }
         end
 
         def concurrency_key
           if job_concurrency
-            @concurrency_key ||= job_concurrency[:key].present? ? job_concurrency[:key] : "traffic_control:concurrency:#{cleaned_name}".freeze
+            @concurrency_key ||= begin
+              if job_concurrency[:key].present?
+                job_concurrency[:key]
+              else
+                "traffic_control:concurrency:#{cleaned_name}"
+              end
+            end
           end
         end
       end
@@ -37,9 +51,9 @@ module ActiveJob
 
               unless locked
                 if self.class.job_concurrency[:drop]
-                  drop("concurrency".freeze)
+                  drop("concurrency")
                 else
-                  reenqueue(CONCURRENCY_REENQUEUE_DELAY, "concurrency".freeze)
+                  reenqueue(CONCURRENCY_REENQUEUE_DELAY, "concurrency")
                 end
               end
             end

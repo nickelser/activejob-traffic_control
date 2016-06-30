@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActiveJob
   module TrafficControl
     module Throttle
@@ -13,7 +15,13 @@ module ActiveJob
 
         def throttling_key
           if job_throttling
-            @throttling_key ||= job_throttling[:key].present? ? job_throttling[:key] : "traffic_control:throttling:#{cleaned_name}".freeze
+            @throttling_key ||= begin
+              if job_throttling[:key].present?
+                job_throttling[:key]
+              else
+                "traffic_control:throttling:#{cleaned_name}"
+              end
+            end
           end
         end
       end
@@ -34,10 +42,10 @@ module ActiveJob
               if token
                 block.call
               elsif self.class.job_throttling[:drop]
-                drop("throttling".freeze)
+                drop("throttling")
               else
                 period = self.class.job_throttling[:period]
-                reenqueue(period...period*5, "throttling".freeze)
+                reenqueue(period...(period * 5), "throttling")
               end
             end
           else

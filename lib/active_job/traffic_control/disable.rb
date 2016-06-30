@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 module ActiveJob
   module TrafficControl
     module Disable
       extend ::ActiveSupport::Concern
 
       DISABLED_REENQUEUE_DELAY = 60...60 * 10
-      SHOULD_DROP = "drop".freeze
-      SHOULD_DISABLE = "true".freeze
+      SHOULD_DROP = "drop"
+      SHOULD_DISABLE = "true"
 
       private_constant :SHOULD_DROP, :SHOULD_DISABLE, :DISABLED_REENQUEUE_DELAY
 
@@ -23,7 +25,7 @@ module ActiveJob
         end
 
         def disable_key
-          @disable_key ||= "traffic_control:disable:#{cleaned_name}".freeze
+          @disable_key ||= "traffic_control:disable:#{cleaned_name}"
         end
       end
 
@@ -35,9 +37,9 @@ module ActiveJob
             disabled = cache_client.read(self.class.disable_key)
 
             if disabled == SHOULD_DROP
-              drop("disabled".freeze)
+              drop("disabled")
             elsif disabled == SHOULD_DISABLE
-              reenqueue(DISABLED_REENQUEUE_DELAY, "disabled".freeze)
+              reenqueue(DISABLED_REENQUEUE_DELAY, "disabled")
             else
               block.call
             end
