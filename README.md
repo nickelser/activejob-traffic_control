@@ -63,6 +63,7 @@ class ConcurrencyTestJob < ActiveJob::Base
 
   def perform
     # only five `ConcurrencyTestJob` will ever run simultaneously
+  end
 end
 ```
 
