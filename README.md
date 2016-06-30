@@ -1,6 +1,6 @@
-# ActiveJob::TrafficControl
+# ActiveJob::TrafficControl [![Build Status](https://travis-ci.org/nickelser/activejob-traffic_control.svg?branch=master)](https://travis-ci.org/nickelser/activejob-traffic_control) [![Code Climate](https://codeclimate.com/github/nickelser/activejob-traffic_control/badges/gpa.svg)](https://codeclimate.com/github/nickelser/activejob-traffic_control) [![Test Coverage](https://codeclimate.com/github/nickelser/activejob-traffic_control/badges/coverage.svg)](https://codeclimate.com/github/nickelser/activejob-traffic_control) [![Gem Version](https://badge.fury.io/rb/activejob-traffic_control.svg)](http://badge.fury.io/rb/activejob-traffic_control)
 
-Hello, world.
+Rate controls for your `ActiveJob`s, powered by [Suo](https://github.com/nickelser/suo), a distributed semaphore library backed by Redis or Memcached.
 
 ## Installation
 
@@ -20,7 +20,40 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+`ActiveJob::TrafficControl` adds three modules you can mixin to your job classes as needed, or to `ApplicationJob` if you are using ActiveJob 5+ (or you have created a base job class yourself).
+
+```ruby
+ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Redis.new } # set thresholds as needed
+
+class CanDisableJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Disable
+
+  def perform
+    # you can pause this job from running by executing `CanDisableJob.disable!` (which will cause the job to be re-enqueued),
+    # or have it be dropped entirely via `CanDisableJob.disable!(drop: true)`
+    # enable it again via `CanDisableJob.enable!`
+  end
+end
+
+class CanThrottleJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Throttle
+
+  throttle threshold: 2, period: 1.second, drop: true
+
+  def perform
+    # no more than two of `CanThrottleJob` will run every second
+    # if more than that attempt to run, they will be dropped (you can set `drop: false` to have the re-enqueued instead)
+  end
+end
+
+class ConcurrencyTestJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Concurrency
+
+  concurrency 5, drop: false
+
+  def perform
+    # only five `ConcurrencyTestJob` will ever run simultaneously
+  end
 
 ## Development
 
@@ -30,5 +63,5 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/activejob-traffic_control.
+Bug reports and pull requests are welcome on GitHub at https://github.com/nickelser/activejob-traffic_control. Please look at the `.rubocop.yml` for the style guide.
 
