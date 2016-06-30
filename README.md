@@ -84,13 +84,16 @@ end
 To provide all of the above functionality to your jobs
 
 ```ruby
-class ConcurrencyTestJob < ActiveJob::Base
+class ApplicationJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Throttle
   include ActiveJob::TrafficControl::Concurrency
+  include ActiveJob::TrafficControl::Disable
 
-  concurrency 5, drop: false
+  concurrency 2, drop: false
+  throttle threshold: 10, period: 1.minute, drop: false
 
   def perform
-    # only five `ConcurrencyTestJob` will ever run simultaneously
+    # will have all of the behaviors
   end
 end
 ```
