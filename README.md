@@ -22,6 +22,8 @@ Or install it yourself as:
 
 `ActiveJob::TrafficControl` adds three modules you can mixin to your job classes as needed, or to `ApplicationJob` if you are using ActiveJob 5+ (or you have created a base job class yourself).
 
+### `Disable`
+
 ```ruby
 ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Redis.new } # set thresholds as needed
 
@@ -34,7 +36,11 @@ class CanDisableJob < ActiveJob::Base
     # enable it again via `CanDisableJob.enable!`
   end
 end
+```
 
+### `Throttle`
+
+```ruby
 class CanThrottleJob < ActiveJob::Base
   include ActiveJob::TrafficControl::Throttle
 
@@ -45,7 +51,11 @@ class CanThrottleJob < ActiveJob::Base
     # if more than that attempt to run, they will be dropped (you can set `drop: false` to have the re-enqueued instead)
   end
 end
+```
 
+### `Concurrency`
+
+```ruby
 class ConcurrencyTestJob < ActiveJob::Base
   include ActiveJob::TrafficControl::Concurrency
 
@@ -53,7 +63,8 @@ class ConcurrencyTestJob < ActiveJob::Base
 
   def perform
     # only five `ConcurrencyTestJob` will ever run simultaneously
-  end
+end
+``
 
 ## Development
 
