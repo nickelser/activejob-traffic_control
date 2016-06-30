@@ -16,3 +16,5 @@ def test_logger
     l
   end
 end
+
+ActiveJob::Base.queue_adapter = :async
