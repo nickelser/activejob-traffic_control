@@ -57,8 +57,12 @@ class ActiveJob::TrafficControlTest < Minitest::Test
     DisableTestJob.perform_now
     assert_equal 1, $disable_count
     DisableTestJob.disable!(drop: true)
+    assert_equal true, DisableTestJob.disabled?
     DisableTestJob.perform_now
     assert_equal 1, $disable_count
+    DisableTestJob.enable!
+    DisableTestJob.perform_now
+    assert_equal 2, $disable_count
   end
 
   def test_throttle
