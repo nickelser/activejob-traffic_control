@@ -3,3 +3,4 @@ rvm:
   - 2.3.1
 services:
   - redis-server
+  - memcached

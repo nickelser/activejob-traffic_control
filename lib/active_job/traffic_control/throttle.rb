@@ -3,10 +3,23 @@ module ActiveJob
     module Throttle
       extend ::ActiveSupport::Concern
 
+      class_methods do
+        attr_accessor :job_throttling
+
+        def throttle(threshold:, period:, drop: false, key: nil)
+          raise ArgumentError, "Threshold needs to be an integer > 0" if threshold.to_i < 1
+          @job_throttling = {threshold: threshold, period: period, drop: drop, key: key}
+        end
+
+        def throttling_key
+          if job_throttling
+            @throttling_key ||= job_throttling[:key].present? ? job_throttling[:key] : "traffic_control:throttling:#{cleaned_name}".freeze
+          end
+        end
+      end
+
       included do
         include ActiveJob::TrafficControl::Base
-
-        @job_throttling = nil
 
         around_perform do |_, block|
           if self.class.job_throttling.present?
@@ -29,23 +42,6 @@ module ActiveJob
             end
           else
             block.call
-          end
-        end
-      end
-
-      class_methods do
-        def throttle(threshold:, period:, drop: false, key: nil)
-          raise ArgumentError, "Threshold needs to be an integer > 0" if threshold.to_i < 1
-          @job_throttling = {threshold: threshold, period: period, drop: drop, key: key}
-        end
-
-        def job_throttling
-          @job_throttling
-        end
-
-        def throttling_key
-          if job_throttling
-            @throttling_key ||= job_throttling[:key].present? ? job_throttling[:key] : "traffic_control:throttling:#{cleaned_name}".freeze
           end
         end
       end

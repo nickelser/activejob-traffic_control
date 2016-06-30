@@ -4,10 +4,28 @@ module ActiveJob
       extend ::ActiveSupport::Concern
 
       DISABLED_REENQUEUE_DELAY = 60...60 * 10
-
       SHOULD_DROP = "drop".freeze
       SHOULD_DISABLE = "true".freeze
-      private_constant :SHOULD_DROP, :SHOULD_DISABLE
+
+      private_constant :SHOULD_DROP, :SHOULD_DISABLE, :DISABLED_REENQUEUE_DELAY
+
+      class_methods do
+        def disable!(drop: false)
+          cache_client.write(disable_key, drop ? SHOULD_DROP : SHOULD_DISABLE)
+        end
+
+        def enable!
+          cache_client.delete(disable_key)
+        end
+
+        def disabled?
+          cache_client && cache_client.read(disable_key)
+        end
+
+        def disable_key
+          @disable_key ||= "traffic_control:disable:#{cleaned_name}".freeze
+        end
+      end
 
       included do
         include ActiveJob::TrafficControl::Base
@@ -26,24 +44,6 @@ module ActiveJob
           else
             block.call
           end
-        end
-      end
-
-      class_methods do
-        def disable!(drop: false)
-          cache_client.write(disable_key, drop ? SHOULD_DROP : SHOULD_DISABLE)
-        end
-
-        def enable!
-          cache_client.delete(disable_key)
-        end
-
-        def disabled?
-          cache_client && cache_client.read(disable_key)
-        end
-
-        def disable_key
-          @disable_key ||= "traffic_control:disable:#{cleaned_name}".freeze
         end
       end
     end

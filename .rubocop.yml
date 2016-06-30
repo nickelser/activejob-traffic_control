@@ -1,11 +1,201 @@
 AllCops:
-  DisplayCopNames: true
-  DisplayStyleGuide: true
-  ExtraDetails: false
-  TargetRubyVersion: 2.3
+  Exclude:
+    - .git/**/*
+    - tmp/**/*
+    - zhong.gemspec
 
-Rails:
+Lint/DuplicateMethods:
   Enabled: true
+
+Lint/DeprecatedClassMethods:
+  Enabled: true
+
+Style/TrailingWhitespace:
+  Enabled: true
+
+Style/Tab:
+  Enabled: true
+
+Style/TrailingBlankLines:
+  Enabled: true
+
+Style/NilComparison:
+  Enabled: true
+
+Style/NonNilCheck:
+  Enabled: true
+
+Style/Not:
+  Enabled: true
+
+Style/RedundantReturn:
+  Enabled: true
+
+Style/ClassCheck:
+  Enabled: true
+
+Style/EmptyLines:
+  Enabled: true
+
+Style/EmptyLiteral:
+  Enabled: true
+
+Style/Alias:
+  Enabled: true
+
+Style/MethodCallParentheses:
+  Enabled: true
+
+Style/MethodDefParentheses:
+  Enabled: true
+
+Style/SpaceBeforeBlockBraces:
+  Enabled: true
+
+Style/SpaceInsideBlockBraces:
+  Enabled: true
+
+Style/SpaceInsideParens:
+  Enabled: true
+
+Style/DeprecatedHashMethods:
+  Enabled: true
+
+Style/HashSyntax:
+  Enabled: true
+
+Style/SpaceInsideHashLiteralBraces:
+  Enabled: true
+  EnforcedStyle: no_space
+
+Style/SpaceInsideBrackets:
+  Enabled: true
+
+Style/AndOr:
+  Enabled: false
+
+Style/TrailingCommaInLiteral:
+  Enabled: true
+
+Style/SpaceBeforeComma:
+  Enabled: true
+
+Style/SpaceBeforeComment:
+  Enabled: true
+
+Style/SpaceBeforeSemicolon:
+  Enabled: true
+
+Style/SpaceAroundBlockParameters:
+  Enabled: true
+
+Style/SpaceAroundOperators:
+  Enabled: true
+
+Style/SpaceAfterColon:
+  Enabled: true
+
+Style/SpaceAfterComma:
+  Enabled: true
+
+Style/SpaceAroundKeyword:
+  Enabled: true
+
+Style/SpaceAfterNot:
+  Enabled: true
+
+Style/SpaceAfterSemicolon:
+  Enabled: true
+
+Lint/UselessComparison:
+  Enabled: true
+
+Lint/InvalidCharacterLiteral:
+  Enabled: true
+
+Lint/LiteralInInterpolation:
+  Enabled: true
+
+Lint/LiteralInCondition:
+  Enabled: true
+
+Lint/UnusedBlockArgument:
+  Enabled: true
+
+Style/VariableInterpolation:
+  Enabled: true
+
+Style/RedundantSelf:
+  Enabled: true
+
+Style/ParenthesesAroundCondition:
+  Enabled: true
+
+Style/WhileUntilDo:
+  Enabled: true
+
+Style/EmptyLineBetweenDefs:
+  Enabled: true
+
+Style/EmptyLinesAroundAccessModifier:
+  Enabled: true
+
+Style/EmptyLinesAroundMethodBody:
+  Enabled: true
+
+Style/ColonMethodCall:
+  Enabled: true
+
+Lint/SpaceBeforeFirstArg:
+  Enabled: true
+
+Lint/UnreachableCode:
+  Enabled: true
+
+Style/UnlessElse:
+  Enabled: true
+
+Style/ClassVars:
+  Enabled: true
+
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: double_quotes
+
+Metrics/CyclomaticComplexity:
+  Max: 8
+
+Metrics/LineLength:
+  Max: 128
+
+Metrics/MethodLength:
+  Max: 32
+
+Metrics/PerceivedComplexity:
+  Max: 8
+
+# Disabled
+
+Style/EvenOdd:
+  Enabled: false
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/NumericLiterals:
+  Enabled: false
+
+Style/UnneededPercentQ:
+  Enabled: false
+
+Style/SpecialGlobalVars:
+  Enabled: false
+
+Style/TrivialAccessors:
+  Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
 
 Metrics/AbcSize:
   Enabled: false
@@ -16,16 +206,7 @@ Metrics/BlockNesting:
 Metrics/ClassLength:
   Enabled: false
 
-Metrics/CyclomaticComplexity:
-  Enabled: false
-
-Metrics/LineLength:
-  Enabled: false
-
 Metrics/MethodLength:
-  Enabled: false
-
-Metrics/ModuleLength:
   Enabled: false
 
 Metrics/ParameterLists:
@@ -34,67 +215,5 @@ Metrics/ParameterLists:
 Metrics/PerceivedComplexity:
   Enabled: false
 
-# Conflicts with the ActiveRecord count method, which doesn't take a block
-Performance/Count:
-  Enabled: false
-
-Style/Alias:
-  Enabled: false
-
-Style/AndOr:
-  Enabled: false
-
-Style/AsciiComments:
-  Enabled: false
-
-Style/BlockDelimiters:
-  Enabled: false
-
-Style/ClosingParenthesisIndentation:
-  Enabled: false
-
-Style/CommandLiteral:
-  Enabled: false
-
 Style/Documentation:
-  Enabled: false
-
-Style/EvenOdd:
-  Enabled: false
-
-Style/NumericLiterals:
-  Enabled: false
-
-Style/PerlBackrefs:
-  Enabled: false
-
-Style/SpaceAroundOperators:
-  Enabled: false
-
-Style/SpaceInsideHashLiteralBraces:
-  EnforcedStyle: no_space
-
-Style/SpecialGlobalVars:
-  Enabled: false
-
-Style/StringLiterals:
-  Enabled: true
-  EnforcedStyle: double_quotes
-
-Style/TrailingCommaInArguments:
-  Enabled: false
-
-Style/TrailingCommaInLiteral:
-  Enabled: false
-
-Style/TrailingUnderscoreVariable:
-  Enabled: false
-
-Style/TrivialAccessors:
-  Enabled: false
-
-Style/UnneededPercentQ:
-  Enabled: false
-
-Style/WordArray:
   Enabled: false
