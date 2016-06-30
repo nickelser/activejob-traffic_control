@@ -19,7 +19,7 @@ module ActiveJob
         end
 
         def disabled?
-          cache_client && cache_client.read(disable_key)
+          cache_client && !cache_client.read(disable_key).nil?
         end
 
         def disable_key
