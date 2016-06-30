@@ -1,16 +1,15 @@
 require "test_helper"
 
-class ActiveJob::TrafficControlTest < Minitest::Test
-  $disable_count = 0
-  $concurrency_count = 0
-  $inherited_concurrency_count = 0
-  $throttle_count = 0
+module ActiveJob::TrafficControlTest
+  def setup_globals
+    $count = 0
+  end
 
   class DisableTestJob < ActiveJob::Base
     include ActiveJob::TrafficControl::Disable
 
     def perform
-      $disable_count += 1
+      $count += 1
     end
   end
 
@@ -20,7 +19,7 @@ class ActiveJob::TrafficControlTest < Minitest::Test
     throttle threshold: 2, period: 1.second, drop: true
 
     def perform
-      $throttle_count += 1
+      $count += 1
     end
   end
 
@@ -31,13 +30,23 @@ class ActiveJob::TrafficControlTest < Minitest::Test
 
     def perform
       sleep 0.5
-      $concurrency_count += 1
+      $count += 1
     end
   end
 
   class InheritedConcurrencyJob < ConcurrencyTestJob
     def perform
-      $inherited_concurrency_count += 1
+      $count += 1
+    end
+  end
+
+  class EverythingBaseJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Concurrency
+    include ActiveJob::TrafficControl::Throttle
+    include ActiveJob::TrafficControl::Disable
+
+    def perform
+      $count += 1
     end
   end
 
@@ -51,14 +60,14 @@ class ActiveJob::TrafficControlTest < Minitest::Test
 
   def test_disable
     DisableTestJob.perform_now
-    assert_equal 1, $disable_count
+    assert_equal 1, $count
     DisableTestJob.disable!(drop: true)
     assert_equal true, DisableTestJob.disabled?
     DisableTestJob.perform_now
-    assert_equal 1, $disable_count
+    assert_equal 1, $count
     DisableTestJob.enable!
     DisableTestJob.perform_now
-    assert_equal 2, $disable_count
+    assert_equal 2, $count
   end
 
   def test_throttle
@@ -66,10 +75,10 @@ class ActiveJob::TrafficControlTest < Minitest::Test
     t2 = Thread.new { ThrottleTestJob.perform_now }
     t3 = Thread.new { ThrottleTestJob.perform_now }
     [t1, t2, t3].map(&:join)
-    assert_equal 2, $throttle_count
+    assert_equal 2, $count
     sleep 1
     ThrottleTestJob.perform_now
-    assert_equal 3, $throttle_count
+    assert_equal 3, $count
   end
 
   def test_concurrency
@@ -77,10 +86,10 @@ class ActiveJob::TrafficControlTest < Minitest::Test
     t2 = Thread.new { ConcurrencyTestJob.perform_now }
     [t1, t2].map(&:join)
     sleep 1
-    assert_equal 1, $concurrency_count
+    assert_equal 1, $count
     ConcurrencyTestJob.perform_later
     sleep 1
-    assert_equal 2, $concurrency_count
+    assert_equal 2, $count
   end
 
   def test_concurrency_is_not_inherited
@@ -88,6 +97,49 @@ class ActiveJob::TrafficControlTest < Minitest::Test
     t2 = Thread.new { InheritedConcurrencyJob.perform_later }
     [t1, t2].map(&:join)
     sleep 1
-    assert_equal 2, $inherited_concurrency_count
+    assert_equal 2, $count
+  end
+
+  def test_everything_at_once
+    EverythingBaseJob.perform_now
+    assert_equal 1, $count
+  end
+end
+
+class MemcachedTrafficControlTest < Minitest::Test
+  include ActiveJob::TrafficControlTest
+
+  def setup
+    ActiveJob::TrafficControl.client = Dalli::Client.new
+    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:dalli_store, "localhost:11211")
+    setup_globals
+  end
+end
+
+class MemcachedPooledTrafficControlTest < Minitest::Test
+  include ActiveJob::TrafficControlTest
+
+  def setup
+    ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Dalli::Client.new }
+    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:dalli_store, "localhost:11211", pool_size: 5)
+    setup_globals
+  end
+end
+
+class RedisTrafficControlTest < Minitest::Test
+  include ActiveJob::TrafficControlTest
+
+  def setup
+    ActiveJob::TrafficControl.client = Redis.new
+    setup_globals
+  end
+end
+
+class RedisPooledTrafficControlTest < Minitest::Test
+  include ActiveJob::TrafficControlTest
+
+  def setup
+    ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Redis.new }
+    setup_globals
   end
 end

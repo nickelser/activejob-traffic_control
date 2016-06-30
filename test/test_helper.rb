@@ -6,6 +6,9 @@ if ENV["CODECLIMATE_REPO_TOKEN"]
   CodeClimate::TestReporter.start
 end
 
+require "dalli"
+require "redis"
+require "connection_pool"
 require "active_job/traffic_control"
 require "minitest/autorun"
 

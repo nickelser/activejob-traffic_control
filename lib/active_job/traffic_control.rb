@@ -43,15 +43,25 @@ module ActiveJob
       def client=(cli)
         @client = cli
 
-        if client.instance_of?(Dalli::Client)
-          @client_klass = Suo::Client::Memcached
-        elsif client.instance_of?(::Redis)
-          @client_klass = Suo::Client::Redis
+        if client.respond_to?(:checkout) # handle ConnectionPools
+          unwrapped_client = client.checkout
+          @client_klass = client_class_type(unwrapped_client)
+          client.checkin
         else
-          raise ArgumentError, "Unsupported client type: #{klass}"
+          @client_klass = client_class_type(client)
         end
 
-        @client
+        client
+      end
+
+      def client_class_type(client)
+        if client.instance_of?(Dalli::Client)
+          Suo::Client::Memcached
+        elsif client.instance_of?(::Redis)
+          Suo::Client::Redis
+        else
+          raise ArgumentError, "Unsupported client type: #{client}"
+        end
       end
     end
   end
