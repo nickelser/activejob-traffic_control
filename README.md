@@ -22,20 +22,11 @@ Or install it yourself as:
 
 `ActiveJob::TrafficControl` adds three modules you can mixin to your job classes as needed, or to `ApplicationJob` if you are using ActiveJob 5+ (or you have created a base job class yourself).
 
-### `Disable`
-
 ```ruby
-ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Redis.new } # set thresholds as needed
-
-class CanDisableJob < ActiveJob::Base
-  include ActiveJob::TrafficControl::Disable
-
-  def perform
-    # you can pause this job from running by executing `CanDisableJob.disable!` (which will cause the job to be re-enqueued),
-    # or have it be dropped entirely via `CanDisableJob.disable!(drop: true)`
-    # enable it again via `CanDisableJob.enable!`
-  end
-end
+# to initialize the type of locking client (memcached vs. redis):
+ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Redis.new } # set poolthresholds as needed
+# or, ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Dalli::Client.new }
+# or if not multithreaded, ActiveJob::TrafficControl.client = Redis.new
 ```
 
 ### `Throttle`
@@ -54,6 +45,43 @@ end
 ```
 
 ### `Concurrency`
+
+```ruby
+class ConcurrencyTestJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Concurrency
+
+  concurrency 5, drop: false
+
+  def perform
+    # only five `ConcurrencyTestJob` will ever run simultaneously
+  end
+end
+```
+
+### `Disable`
+
+For `Disable`, you also need to configure the cache client:
+
+```ruby
+ActiveJob::TrafficControl.cache_client = Rails.cache.dalli # if using :dalli_store
+# or ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:dalli_store, "localhost:11211")
+```
+
+```ruby
+class CanDisableJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Disable
+
+  def perform
+    # you can pause this job from running by executing `CanDisableJob.disable!` (which will cause the job to be re-enqueued),
+    # or have it be dropped entirely via `CanDisableJob.disable!(drop: true)`
+    # enable it again via `CanDisableJob.enable!`
+  end
+end
+```
+
+### `ApplicationJob`
+
+To provide all of the above functionality to your jobs
 
 ```ruby
 class ConcurrencyTestJob < ActiveJob::Base
