@@ -19,6 +19,40 @@ module ActiveJob::TrafficControlTest
     throttle threshold: 2, period: 1.second, drop: true
 
     def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ThrottleWithKeyTestJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Throttle
+
+    throttle threshold: 2, period: 1.second, drop: true, key: "throttle_test_key"
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ThrottleWithProcKeyTestJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Throttle
+
+    throttle threshold: 2, period: 1.second, drop: true, key: -> (_) { "throttle_proc_job_name" }
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ThrottleNotDroppedTestJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Throttle
+
+    throttle threshold: 2, period: 1.second, drop: false
+
+    def perform
+      sleep 0.5
       $count += 1
     end
   end
@@ -27,6 +61,39 @@ module ActiveJob::TrafficControlTest
     include ActiveJob::TrafficControl::Concurrency
 
     concurrency 1, drop: true
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ConcurrencyNotDroppedTestJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Concurrency
+
+    concurrency 1, drop: false
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ConcurrencyWithKeyTestJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Concurrency
+
+    concurrency 1, drop: true, key: "concurrency_test_key"
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ConcurrencyWithProcKeyTestJob < ActiveJob::Base
+    include ActiveJob::TrafficControl::Concurrency
+
+    concurrency 1, drop: true, key: -> (_) { "concurrency_proc_job_name" }
 
     def perform
       sleep 0.5
@@ -70,33 +137,80 @@ module ActiveJob::TrafficControlTest
     assert_equal 2, $count
   end
 
-  def test_throttle
-    t1 = Thread.new { ThrottleTestJob.perform_now }
-    t2 = Thread.new { ThrottleTestJob.perform_now }
-    t3 = Thread.new { ThrottleTestJob.perform_now }
+  def throttle_helper(klass)
+    t1 = Thread.new { klass.perform_now }
+    t2 = Thread.new { klass.perform_now }
+    t3 = Thread.new { klass.perform_now }
     [t1, t2, t3].map(&:join)
+    sleep 0.5
     assert_equal 2, $count
     sleep 1
-    ThrottleTestJob.perform_now
+    klass.perform_now
     assert_equal 3, $count
   end
 
-  def test_concurrency
-    t1 = Thread.new { ConcurrencyTestJob.perform_now }
-    t2 = Thread.new { ConcurrencyTestJob.perform_now }
+  def test_throttle
+    throttle_helper(ThrottleTestJob)
+  end
+
+  def test_throttle_with_key
+    throttle_helper(ThrottleWithKeyTestJob)
+  end
+
+  def test_throttle_with_proc_key
+    throttle_helper(ThrottleWithProcKeyTestJob)
+  end
+
+  def test_throttle_not_dropped
+    return unless ActiveJob::Base.queue_adapter == :async
+
+    t1 = Thread.new { ThrottleNotDroppedTestJob.perform_now }
+    t2 = Thread.new { ThrottleNotDroppedTestJob.perform_now }
+    t3 = Thread.new { ThrottleNotDroppedTestJob.perform_now }
+    [t1, t2, t3].map(&:join)
+    sleep 0.5
+    assert_equal 2, $count
+    sleep 6
+    assert_equal 3, $count
+  end
+
+  def concurrency_helper(klass)
+    t1 = Thread.new { klass.perform_now }
+    t2 = Thread.new { klass.perform_now }
     [t1, t2].map(&:join)
-    sleep 1
+    sleep 0.5
     assert_equal 1, $count
-    ConcurrencyTestJob.perform_later
-    sleep 1
+    klass.perform_now
+    assert_equal 2, $count
+  end
+
+  def test_concurrency
+    concurrency_helper(ConcurrencyTestJob)
+  end
+
+  def test_concurrency_with_key
+    concurrency_helper(ConcurrencyWithKeyTestJob)
+  end
+
+  def test_concurrency_with_proc_key
+    concurrency_helper(ConcurrencyWithProcKeyTestJob)
+  end
+
+  def test_concurrent_not_dropped
+    return unless ActiveJob::Base.queue_adapter == :async
+
+    t1 = Thread.new { ConcurrencyNotDroppedTestJob.perform_now }
+    t2 = Thread.new { ConcurrencyNotDroppedTestJob.perform_now }
+    [t1, t2].map(&:join)
+    assert_equal 1, $count
+    sleep 6
     assert_equal 2, $count
   end
 
   def test_concurrency_is_not_inherited
-    t1 = Thread.new { InheritedConcurrencyJob.perform_later }
-    t2 = Thread.new { InheritedConcurrencyJob.perform_later }
+    t1 = Thread.new { InheritedConcurrencyJob.perform_now }
+    t2 = Thread.new { InheritedConcurrencyJob.perform_now }
     [t1, t2].map(&:join)
-    sleep 1
     assert_equal 2, $count
   end
 

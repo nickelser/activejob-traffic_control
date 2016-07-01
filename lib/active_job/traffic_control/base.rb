@@ -18,6 +18,22 @@ module ActiveJob
         def cache_client
           ActiveJob::TrafficControl.cache_client
         end
+
+        def lock_key(prefix, job, config_attr)
+          if config_attr
+            if config_attr[:key].respond_to?(:call)
+              "traffic_control:#{prefix}:#{config_attr[:key].call(job)}"
+            else
+              @static_job_key ||= begin
+                if config_attr[:key].present?
+                  "traffic_control:#{prefix}:#{config_attr[:key]}"
+                else
+                  "traffic_control:#{prefix}:#{cleaned_name}"
+                end
+              end
+            end
+          end
+        end
       end
 
       # convenience methods
@@ -28,12 +44,12 @@ module ActiveJob
       def reenqueue(range, reason)
         later_delay = rand(range).seconds
         retry_job(wait: later_delay)
-        logger.error "Re-enqueing #{self.class.name} to run in #{later_delay}s due to #{reason}"
+        logger.info "Re-enqueing #{self.class.name} to run in #{later_delay}s due to #{reason}"
         ActiveSupport::Notifications.instrument "re_enqueue.active_job", job: self, reason: reason
       end
 
       def drop(reason)
-        logger.error "Dropping #{self.class.name} due to #{reason}"
+        logger.info "Dropping #{self.class.name} due to #{reason}"
         ActiveSupport::Notifications.instrument "dropped.active_job", job: self, reason: reason
       end
 

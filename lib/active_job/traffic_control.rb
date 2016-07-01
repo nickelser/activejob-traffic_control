@@ -36,7 +36,7 @@ module ActiveJob
       def client
         @client ||= begin
           logger.error "defaulting to Redis as the lock client; please set "\
-                       " `ActiveJob::TrafficControl.client` to a Redis or Memcached client,"
+                       " `ActiveJob::TrafficControl.client` to a Redis or Memcached client."
           @client_klass = Suo::Client::Redis
           Redis.new(url: ENV["REDIS_URL"])
         end

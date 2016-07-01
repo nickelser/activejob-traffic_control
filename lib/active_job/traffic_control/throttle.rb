@@ -10,33 +10,31 @@ module ActiveJob
 
         def throttle(threshold:, period:, drop: false, key: nil)
           raise ArgumentError, "Threshold needs to be an integer > 0" if threshold.to_i < 1
-          @job_throttling = {threshold: threshold, period: period, drop: drop, key: key}
+
+          @job_throttling = {
+            threshold: threshold,
+            period: period,
+            drop: drop,
+            key: key
+          }
         end
 
-        def throttling_key
-          if job_throttling
-            @throttling_key ||= begin
-              if job_throttling[:key].present?
-                job_throttling[:key]
-              else
-                "traffic_control:throttling:#{cleaned_name}"
-              end
-            end
-          end
+        def throttling_lock_key(job)
+          lock_key("throttle", job, job_throttling)
         end
       end
 
       included do
         include ActiveJob::TrafficControl::Base
 
-        around_perform do |_, block|
+        around_perform do |job, block|
           if self.class.job_throttling.present?
             lock_options = {
               resources: self.class.job_throttling[:threshold],
               stale_lock_expiration: self.class.job_throttling[:period]
             }
 
-            with_lock_client(self.class.throttling_key, lock_options) do |client|
+            with_lock_client(self.class.throttling_lock_key(job), lock_options) do |client|
               token = client.lock
 
               if token
