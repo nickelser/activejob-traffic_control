@@ -35,11 +35,27 @@ ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Red
 class CanThrottleJob < ActiveJob::Base
   include ActiveJob::TrafficControl::Throttle
 
+  throttle threshold: 2, period: 1.second
+
+  def perform
+    # no more than two of `CanThrottleJob` will run every second
+    # if more than that attempt to run, they will be re-enqueued to run in a random time
+    # ranging from 1 - 5x the period (so, 1-5 seconds in this case)
+  end
+end
+```
+
+If you do not care about the job being re-enqueued (if it's scheduled to run otherwise, or dropping will have no ill effect), you can specify `drop: true` instead. The `drop: true` flag also applies to `Concurrency`, below.
+
+```ruby
+class CanThrottleAndDropJob < ActiveJob::Base
+  include ActiveJob::TrafficControl::Throttle
+
   throttle threshold: 2, period: 1.second, drop: true
 
   def perform
     # no more than two of `CanThrottleJob` will run every second
-    # if more than that attempt to run, they will be dropped (you can set `drop: false` to have the re-enqueued instead)
+    # if more than that attempt to run, they will be dropped
   end
 end
 ```
