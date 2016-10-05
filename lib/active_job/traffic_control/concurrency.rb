@@ -8,12 +8,10 @@ module ActiveJob
       CONCURRENCY_REENQUEUE_DELAY = ENV["RACK_ENV"] == "test" ? 1...5 : 30...(60 * 5)
 
       class_methods do
-        attr_accessor :job_concurrency
-
         def concurrency(threshold, drop: true, key: nil, wait_timeout: 0.1, stale_timeout: 60 * 10)
           raise ArgumentError, "Concurrent jobs needs to be an integer > 0" if threshold.to_i < 1
 
-          @job_concurrency = {
+          self.job_concurrency = {
             threshold: threshold.to_i,
             drop: drop,
             wait_timeout: wait_timeout.to_f,
@@ -29,6 +27,8 @@ module ActiveJob
 
       included do
         include ActiveJob::TrafficControl::Base
+
+        class_attribute :job_concurrency, instance_accessor: false
 
         around_perform do |job, block|
           if self.class.job_concurrency.present?
