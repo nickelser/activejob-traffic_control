@@ -6,12 +6,10 @@ module ActiveJob
       extend ::ActiveSupport::Concern
 
       class_methods do
-        attr_accessor :job_throttling
-
         def throttle(threshold:, period:, drop: false, key: nil)
           raise ArgumentError, "Threshold needs to be an integer > 0" if threshold.to_i < 1
 
-          @job_throttling = {
+          self.job_throttling = {
             threshold: threshold,
             period: period,
             drop: drop,
@@ -26,6 +24,8 @@ module ActiveJob
 
       included do
         include ActiveJob::TrafficControl::Base
+
+        class_attribute :job_throttling, instance_accessor: false
 
         around_perform do |job, block|
           if self.class.job_throttling.present?
