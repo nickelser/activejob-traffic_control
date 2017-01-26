@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "active_job"
-require "active_support/all"
+require "active_support"
 require "suo"
 
 require "active_job/traffic_control/version"

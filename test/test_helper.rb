@@ -11,7 +11,8 @@ end
 require "dalli"
 require "redis"
 require "connection_pool"
-require "active_job/traffic_control"
+require "activejob/traffic_control"
+require "active_job"
 require "minitest/autorun"
 
 test_logger = begin
