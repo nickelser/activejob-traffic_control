@@ -33,8 +33,6 @@ ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Red
 
 ```ruby
 class CanThrottleJob < ActiveJob::Base
-  include ActiveJob::TrafficControl::Throttle
-
   throttle threshold: 2, period: 1.second
 
   def perform
@@ -49,8 +47,6 @@ If you do not care about the job being re-enqueued (if it's scheduled to run oth
 
 ```ruby
 class CanThrottleAndDropJob < ActiveJob::Base
-  include ActiveJob::TrafficControl::Throttle
-
   throttle threshold: 2, period: 1.second, drop: true
 
   def perform
@@ -64,8 +60,6 @@ end
 
 ```ruby
 class ConcurrencyTestJob < ActiveJob::Base
-  include ActiveJob::TrafficControl::Concurrency
-
   concurrency 5, drop: false
 
   def perform
@@ -85,31 +79,10 @@ ActiveJob::TrafficControl.cache_client = Rails.cache.dalli # if using :dalli_sto
 
 ```ruby
 class CanDisableJob < ActiveJob::Base
-  include ActiveJob::TrafficControl::Disable
-
   def perform
     # you can pause this job from running by executing `CanDisableJob.disable!` (which will cause the job to be re-enqueued),
     # or have it be dropped entirely via `CanDisableJob.disable!(drop: true)`
     # enable it again via `CanDisableJob.enable!`
-  end
-end
-```
-
-### `ApplicationJob`
-
-To provide all of the above functionality to your jobs
-
-```ruby
-class ApplicationJob < ActiveJob::Base
-  include ActiveJob::TrafficControl::Throttle
-  include ActiveJob::TrafficControl::Concurrency
-  include ActiveJob::TrafficControl::Disable
-
-  concurrency 2, drop: false
-  throttle threshold: 10, period: 1.minute, drop: false
-
-  def perform
-    # will have all of the behaviors
   end
 end
 ```
