@@ -6,16 +6,12 @@ module ActiveJob::TrafficControlTest
   end
 
   class DisableTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Disable
-
     def perform
       $count += 1
     end
   end
 
   class ThrottleTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Throttle
-
     throttle threshold: 2, period: 1.second, drop: true
 
     def perform
@@ -25,8 +21,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ThrottleWithKeyTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Throttle
-
     throttle threshold: 2, period: 1.second, drop: true, key: "throttle_test_key"
 
     def perform
@@ -36,8 +30,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ThrottleWithProcKeyTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Throttle
-
     throttle threshold: 2, period: 1.second, drop: true, key: -> (_) { "throttle_proc_job_name" }
 
     def perform
@@ -47,8 +39,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ThrottleNotDroppedTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Throttle
-
     throttle threshold: 2, period: 1.second, drop: false
 
     def perform
@@ -58,8 +48,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ConcurrencyTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Concurrency
-
     concurrency 1, drop: true
 
     def perform
@@ -69,8 +57,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ConcurrencyNotDroppedTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Concurrency
-
     concurrency 1, drop: false
 
     def perform
@@ -80,8 +66,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ConcurrencyWithKeyTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Concurrency
-
     concurrency 1, drop: true, key: "concurrency_test_key"
 
     def perform
@@ -91,8 +75,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class ConcurrencyWithProcKeyTestJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Concurrency
-
     concurrency 1, drop: true, key: -> (_) { "concurrency_proc_job_name" }
 
     def perform
@@ -108,10 +90,6 @@ module ActiveJob::TrafficControlTest
   end
 
   class EverythingBaseJob < ActiveJob::Base
-    include ActiveJob::TrafficControl::Concurrency
-    include ActiveJob::TrafficControl::Throttle
-    include ActiveJob::TrafficControl::Disable
-
     def perform
       $count += 1
     end

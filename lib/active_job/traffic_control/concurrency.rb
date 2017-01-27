@@ -8,7 +8,7 @@ module ActiveJob
       CONCURRENCY_REENQUEUE_DELAY = ENV["RACK_ENV"] == "test" ? 1...5 : 30...(60 * 5)
 
       class_methods do
-        def concurrency(threshold, drop: true, key: nil, wait_timeout: 0.1, stale_timeout: 60 * 10)
+        def concurrency(threshold, drop: false, key: nil, wait_timeout: 0.1, stale_timeout: 60 * 10)
           raise ArgumentError, "Concurrent jobs needs to be an integer > 0" if threshold.to_i < 1
 
           self.job_concurrency = {
