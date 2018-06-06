@@ -95,6 +95,14 @@ module ActiveJob::TrafficControlTest
     end
   end
 
+  class ThrottleConcurrencyTestJob < ActiveJob::Base
+    throttle threshold: 2, period: 1.second, drop: true
+    concurrency 1, drop: true
+
+    def perform
+    end
+  end
+
   def test_that_it_has_a_version_number
     refute_nil ::ActiveJob::TrafficControl::VERSION
   end
@@ -195,6 +203,13 @@ module ActiveJob::TrafficControlTest
   def test_everything_at_once
     EverythingBaseJob.perform_now
     assert_equal 1, $count
+  end
+
+  def test_throttle_concurrency_different_keys
+    job = ThrottleConcurrencyTestJob.new
+    throttle = ThrottleConcurrencyTestJob.throttling_lock_key(job)
+    concurrency = ThrottleConcurrencyTestJob.concurrency_lock_key(job)
+    refute_equal throttle, concurrency
   end
 end
 
