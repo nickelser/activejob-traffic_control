@@ -235,3 +235,23 @@ class RedisPooledTrafficControlTest < Minitest::Test
     setup_globals
   end
 end
+
+class RedisNamespacedTrafficControlTest < Minitest::Test
+  include ActiveJob::TrafficControlTest
+
+  def setup
+    ActiveJob::TrafficControl.client = Redis::Namespace.new(:namespace, redis: Redis.new)
+    setup_globals
+  end
+end
+
+class RedisNamespacedPooldedTrafficControlTest < Minitest::Test
+  include ActiveJob::TrafficControlTest
+
+  def setup
+    ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) do
+      Redis::Namespace.new(:namespace, redis: Redis.new)
+    end
+    setup_globals
+  end
+end

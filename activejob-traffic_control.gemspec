@@ -28,4 +28,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "codeclimate-test-reporter", "~> 0.4.7"
   spec.add_development_dependency "connection_pool"
+  spec.add_development_dependency "redis-namespace", "~> 1.6"
 end

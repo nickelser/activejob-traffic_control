@@ -14,6 +14,7 @@ require "connection_pool"
 require "activejob/traffic_control"
 require "active_job"
 require "minitest/autorun"
+require "redis/namespace"
 
 test_logger = begin
   l = Logger.new(STDOUT)
