@@ -20,6 +20,15 @@ module ActiveJob::TrafficControlTest
     end
   end
 
+  class ThrottleWithProcThresholdTestJob < ActiveJob::Base
+    throttle threshold: -> (_) { 2 }, period: 1.second, drop: true
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
   class ThrottleWithKeyTestJob < ActiveJob::Base
     throttle threshold: 2, period: 1.second, drop: true, key: "throttle_test_key"
 
@@ -49,6 +58,15 @@ module ActiveJob::TrafficControlTest
 
   class ConcurrencyTestJob < ActiveJob::Base
     concurrency 1, drop: true
+
+    def perform
+      sleep 0.5
+      $count += 1
+    end
+  end
+
+  class ConcurrencyWithProcThresholdTestJob < ActiveJob::Base
+    concurrency -> (_) { 1 }, drop: true
 
     def perform
       sleep 0.5
@@ -117,10 +135,10 @@ module ActiveJob::TrafficControlTest
 
   def throttle_helper(klass)
     t1 = Thread.new { klass.perform_now }
-    t2 = Thread.new { klass.perform_now }
-    t3 = Thread.new { klass.perform_now }
+    t2 = Thread.new { sleep(0.2); klass.perform_now }
+    t3 = Thread.new { sleep(0.2); klass.perform_now }
     [t1, t2, t3].map(&:join)
-    sleep 0.5
+    sleep 0.7
     assert_equal 2, $count
     sleep 1
     klass.perform_now
@@ -129,6 +147,10 @@ module ActiveJob::TrafficControlTest
 
   def test_throttle
     throttle_helper(ThrottleTestJob)
+  end
+
+  def test_throttle_with_proc_threshold
+    throttle_helper(ThrottleWithProcThresholdTestJob)
   end
 
   def test_throttle_with_key
@@ -154,9 +176,9 @@ module ActiveJob::TrafficControlTest
 
   def concurrency_helper(klass)
     t1 = Thread.new { klass.perform_now }
-    t2 = Thread.new { klass.perform_now }
+    t2 = Thread.new { sleep(0.2); klass.perform_now }
     [t1, t2].map(&:join)
-    sleep 0.5
+    sleep 0.7
     assert_equal 1, $count
     klass.perform_now
     assert_equal 2, $count
@@ -164,6 +186,10 @@ module ActiveJob::TrafficControlTest
 
   def test_concurrency
     concurrency_helper(ConcurrencyTestJob)
+  end
+
+  def test_concurrency_with_proc_threshold
+    concurrency_helper(ConcurrencyWithProcThresholdTestJob)
   end
 
   def test_concurrency_with_key

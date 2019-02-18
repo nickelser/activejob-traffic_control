@@ -7,7 +7,7 @@ module ActiveJob
 
       class_methods do
         def throttle(threshold:, period:, drop: false, key: nil)
-          raise ArgumentError, "Threshold needs to be an integer > 0" if threshold.to_i < 1
+          raise ArgumentError, "Threshold needs to be an integer > 0" if !threshold.is_a?(Proc) && threshold.to_i < 1
 
           self.job_throttling = {
             threshold: threshold,
@@ -30,7 +30,7 @@ module ActiveJob
         around_perform do |job, block|
           if self.class.job_throttling.present?
             lock_options = {
-              resources: self.class.job_throttling[:threshold],
+              resources: self.class.lock_resources(job, self.class.job_throttling),
               stale_lock_expiration: self.class.job_throttling[:period]
             }
 

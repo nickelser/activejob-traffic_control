@@ -25,7 +25,7 @@ module ActiveJob
         end
 
         def disable_key
-          @disable_key ||= "traffic_control:disable:#{cleaned_name}"
+          @disable_key ||= lock_key('disable')
         end
       end
 

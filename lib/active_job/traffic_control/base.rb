@@ -19,20 +19,24 @@ module ActiveJob
           ActiveJob::TrafficControl.cache_client
         end
 
-        def lock_key(prefix, job, config_attr)
+        def lock_key(prefix, job = nil, config_attr = {})
           if config_attr
             if config_attr[:key].respond_to?(:call)
               "traffic_control:#{prefix}:#{config_attr[:key].call(job)}"
             else
-              @static_job_key ||= begin
-                if config_attr[:key].present?
-                  "traffic_control:#{prefix}:#{config_attr[:key]}"
-                else
-                  "traffic_control:#{prefix}:#{cleaned_name}"
-                end
+              if config_attr[:key].present?
+                "traffic_control:#{prefix}:#{config_attr[:key]}"
+              else
+                "traffic_control:#{prefix}:#{cleaned_name}"
               end
             end
           end
+        end
+
+        def lock_resources(job, config_attr)
+          threshold = config_attr[:threshold]
+          threshold = threshold.call(job) if threshold.respond_to?(:call)
+          threshold.to_i
         end
       end
 

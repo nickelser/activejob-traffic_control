@@ -9,10 +9,10 @@ module ActiveJob
 
       class_methods do
         def concurrency(threshold, drop: false, key: nil, wait_timeout: 0.1, stale_timeout: 60 * 10)
-          raise ArgumentError, "Concurrent jobs needs to be an integer > 0" if threshold.to_i < 1
+          raise ArgumentError, "Concurrent jobs needs to be an integer > 0" if !threshold.is_a?(Proc) && threshold.to_i < 1
 
           self.job_concurrency = {
-            threshold: threshold.to_i,
+            threshold: threshold,
             drop: drop,
             wait_timeout: wait_timeout.to_f,
             stale_timeout: stale_timeout.to_f,
@@ -33,7 +33,7 @@ module ActiveJob
         around_perform do |job, block|
           if self.class.job_concurrency.present?
             lock_options = {
-              resources: self.class.job_concurrency[:threshold],
+              resources: self.class.lock_resources(job, self.class.job_concurrency),
               acquisition_lock: self.class.job_concurrency[:wait_timeout],
               stale_lock_expiration: self.class.job_concurrency[:stale_timeout]
             }
