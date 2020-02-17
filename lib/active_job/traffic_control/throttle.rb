@@ -6,14 +6,28 @@ module ActiveJob
       extend ::ActiveSupport::Concern
 
       class_methods do
-        def throttle(threshold:, period:, drop: false, key: nil)
+        def throttle(
+          threshold:,
+          period:,
+          drop: false,
+          key: nil,
+          delay: period,
+          min_delay_multiplier: 1,
+          max_delay_multiplier: 5
+        )
           raise ArgumentError, "Threshold needs to be an integer > 0" if threshold.to_i < 1
+          raise ArgumentError, "min_delay_multiplier needs to be a number >= 0" unless min_delay_multiplier.is_a?(Numeric) && min_delay_multiplier >= 0
+          raise ArgumentError, "max_delay_multiplier needs to be a number >= max_delay_multiplier" unless max_delay_multiplier.is_a?(Numeric) && max_delay_multiplier >= min_delay_multiplier
+          raise ArgumentError, "delay needs to a number > 0 " unless delay.is_a?(Numeric) && delay > 0
 
           self.job_throttling = {
             threshold: threshold,
             period: period,
             drop: drop,
-            key: key
+            key: key,
+            delay: delay,
+            min_delay_multiplier: min_delay_multiplier,
+            max_delay_multiplier: max_delay_multiplier
           }
         end
 
@@ -42,8 +56,10 @@ module ActiveJob
               elsif self.class.job_throttling[:drop]
                 drop("throttling")
               else
-                period = self.class.job_throttling[:period]
-                reenqueue(period...(period * 5), "throttling")
+                delay = self.class.job_throttling[:delay]
+                min_delay_multiplier = self.class.job_throttling[:min_delay_multiplier]
+                max_delay_multiplier = self.class.job_throttling[:max_delay_multiplier]
+                reenqueue((delay * min_delay_multiplier)...(delay * max_delay_multiplier), "throttling")
               end
             end
           else
