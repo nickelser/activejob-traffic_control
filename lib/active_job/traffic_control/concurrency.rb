@@ -34,7 +34,7 @@ module ActiveJob
           if self.class.job_concurrency.present?
             lock_options = {
               resources: self.class.job_concurrency[:threshold],
-              acquisition_lock: self.class.job_concurrency[:wait_timeout],
+              acquisition_timeout: self.class.job_concurrency[:wait_timeout],
               stale_lock_expiration: self.class.job_concurrency[:stale_timeout]
             }
 
