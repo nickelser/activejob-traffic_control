@@ -4,19 +4,27 @@ Rate controls for your `ActiveJob`s, powered by [Suo](https://github.com/nickels
 
 ## Installation
 
-Add this line to your application's Gemfile:
+1. Add this line to your application's Gemfile:
 
-```ruby
-gem 'activejob-traffic_control'
-```
+   ```ruby
+   gem 'activejob-traffic_control'
+   ```
 
-And then execute:
+2. Add `dalli` if you want to use Memcached or `redis` if you want to use Redis.
 
-    $ bundle
+   ```ruby
+   # Memcached
+   gem 'dalli'
 
-Or install it yourself as:
+   # Redis
+   gem 'redis'
+   ```
 
-    $ gem install activejob-traffic_control
+3. And then execute:
+
+   ```bash
+   $ bundle
+   ```
 
 ## Usage
 
@@ -73,8 +81,11 @@ end
 For `Disable`, you also need to configure the cache client:
 
 ```ruby
-ActiveJob::TrafficControl.cache_client = Rails.cache.dalli # if using :dalli_store
-# or ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:dalli_store, "localhost:11211")
+# Memcached
+ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:mem_cache_store, "localhost:11211")
+
+# Redis
+ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:redis_cache_store)
 ```
 
 ```ruby

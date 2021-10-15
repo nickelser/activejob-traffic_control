@@ -203,7 +203,7 @@ class MemcachedTrafficControlTest < Minitest::Test
 
   def setup
     ActiveJob::TrafficControl.client = Dalli::Client.new
-    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:dalli_store, "localhost:11211")
+    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:mem_cache_store, "localhost:11211")
     setup_globals
   end
 end
@@ -213,7 +213,7 @@ class MemcachedPooledTrafficControlTest < Minitest::Test
 
   def setup
     ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Dalli::Client.new }
-    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:dalli_store, "localhost:11211", pool_size: 5)
+    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:mem_cache_store, "localhost:11211", pool_size: 5)
     setup_globals
   end
 end
@@ -223,6 +223,7 @@ class RedisTrafficControlTest < Minitest::Test
 
   def setup
     ActiveJob::TrafficControl.client = Redis.new
+    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:redis_cache_store)
     setup_globals
   end
 end
@@ -232,6 +233,7 @@ class RedisPooledTrafficControlTest < Minitest::Test
 
   def setup
     ActiveJob::TrafficControl.client = ConnectionPool.new(size: 5, timeout: 5) { Redis.new }
+    ActiveJob::TrafficControl.cache_client = ActiveSupport::Cache.lookup_store(:redis_cache_store, pool_size: 5)
     setup_globals
   end
 end
