@@ -17,7 +17,9 @@ module ActiveJob
       attr_accessor :client_klass
 
       def cache_client
-        @cache_client ||= begin
+        return @cache_client if defined?(@cache_client)
+
+        @cache_client = begin
           if defined?(Rails.cache)
             Rails.cache
           else
