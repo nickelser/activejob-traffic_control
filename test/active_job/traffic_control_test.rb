@@ -113,6 +113,9 @@ module ActiveJob::TrafficControlTest
     DisableTestJob.enable!
     DisableTestJob.perform_now
     assert_equal 2, $count
+
+    ActiveJob::TrafficControl.cache_client = false
+    DisableTestJob.perform_now
   end
 
   def throttle_helper(klass)

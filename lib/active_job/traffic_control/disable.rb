@@ -13,10 +13,14 @@ module ActiveJob
 
       class_methods do
         def disable!(drop: false)
+          return false unless cache_client
+
           cache_client.write(disable_key, drop ? SHOULD_DROP : SHOULD_DISABLE)
         end
 
         def enable!
+          return false unless cache_client
+
           cache_client.delete(disable_key)
         end
 
